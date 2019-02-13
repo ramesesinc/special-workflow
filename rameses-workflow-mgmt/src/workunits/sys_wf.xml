@@ -1,0 +1,19 @@
+<workunit allowCreate="false">
+    
+    <invokers>
+        <invoker type="sys_wf:create" caption="New Workflow" target="window"  action="create"/>
+        <invoker type="sys_wf:open" caption="Open Workflow" target="window"  action="open"/>
+        
+        <!-- form actions -->
+        <invoker type="formActions" caption="Close"  action="_close" immediate="true"/>
+        <invoker type="formActions" caption="Edit"  action="edit" visibleWhen="#{editing == false }"/>
+        <invoker type="formActions" caption="Save"  action="save" visibleWhen="#{editing == true }"/>
+        <invoker type="formActions" caption="View Info"  action="viewInfo" />
+        <invoker type="formActions" caption="Export Data"  action="exportData" />
+    </invokers>
+    <code class="com.rameses.wf.models.WorkflowGUIModel"/>
+    <pages>
+        <page template="com.rameses.wf.views.WorkflowGUIPage"/>    
+    </pages>
+    
+</workunit>
