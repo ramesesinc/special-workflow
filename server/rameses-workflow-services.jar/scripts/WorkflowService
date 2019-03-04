@@ -126,7 +126,7 @@ class WorkflowService extends ActiveWorkflowService {
 		if( !r.objid ) throw new Exception("objid is required in WorkflowService.getOpenTaskList");
 		if( !r.processname ) throw new Exception("processname is required  in WorkflowService.getOpenTaskList");
 		if( !r.source ) throw new Exception("source is required  in WorkflowService.getOpenTaskList");    
-		if(	!r.adapter) r.adapter = "main";
+		if(	!r.adapter) r.adapter = "wfdb";
 
     	def db = em.lookup( r.adapter, r.source );
 		return db.getOpenTaskList( r );
@@ -137,7 +137,7 @@ class WorkflowService extends ActiveWorkflowService {
 		if( !r.taskid ) throw new Exception("taskid is required in WorkflowService.getTransitionList");
 		if( !r.processname ) throw new Exception("processname is required  in WorkflowService.getTransitionList");
 		if( !r.source ) throw new Exception("source is required  in WorkflowService.getTransitionList");    
-		if(	!r.adapter) r.adapter = "main";
+		if(	!r.adapter) r.adapter = "wfdb";
     	def db = em.lookup( r.adapter, r.source );
 		def tsk = db.read( [objid:r.taskid] );
 		return wf.getTransitionList( [nodename:tsk.state, processname:r.processname] );

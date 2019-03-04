@@ -1,4 +1,4 @@
-<schema>
+<schema adapter="wfdb">
 	
 	<element tablename="sys_wf_task">
 		<field name="objid" primary="true"/>

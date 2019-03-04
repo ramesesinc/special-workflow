@@ -10,7 +10,7 @@ import com.rameses.services.extended.*;
 ************************************************************************/
 class WorkflowTaskListService2 extends ActiveListService {		
 
-	@ActiveDB("wf")
+	@ActiveDB(value="wf", adapter="wfdb")
 	def em;
 
 	String listMethod = "getTaskListByRef"

@@ -1,4 +1,4 @@
-<schema adapter="system">
+<schema adapter="wfdb">
 
 	<element tablename="sys_wf_transition" orderBy="idx">
 		<field name="parentid" primary="true"/>

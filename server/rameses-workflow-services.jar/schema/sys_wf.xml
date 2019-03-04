@@ -1,4 +1,4 @@
-<schema adapter="system">
+<schema adapter="wfdb">
 
 	<element tablename="sys_wf">
 		<field name="name" primary="true" required="true" visible="true" caption="Name"/>

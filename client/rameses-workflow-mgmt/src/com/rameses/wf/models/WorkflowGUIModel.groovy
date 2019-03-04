@@ -17,8 +17,8 @@ import java.rmi.server.*;
 
 public class WorkflowGUIModel  {
     
-    @Service("WorkflowGUIService")
-    def guiSvc;
+    @Caller
+    def caller;
 
     @FormTitle
     String title;
@@ -35,13 +35,26 @@ public class WorkflowGUIModel  {
     def _deletedfigures = [];
     def _deletedconnectors = [];
     
+    public def getGuiSvc() {
+        return InvokerProxy.instance.create( "WorkflowGUIService", null, getConnection() );
+    }
+    
+    public def getRoot() {
+        return caller.getRoot();
+    }
+    
+    public String getConnection() {
+        return getRoot().getConnection();
+    }
+    
     void create() {
         boolean pass = false;
         def m = [:];
         m.handler = { o->
             entity = guiSvc.create( o );
             pass = true;
-        }    
+        };
+        m.connection = connection;
         Modal.show("sys_wf_info:create", m );
         if( !pass ) throw new BreakException();
         editing = true;
@@ -90,14 +103,14 @@ public class WorkflowGUIModel  {
         fetchData : { data },
         open : {
             if( it instanceof Connector ) {
-                Modal.show( 'sys_wf_transition:open', [item:it, editing: editing] );
+                Modal.show( 'sys_wf_transition:open', [item:it, editing: editing, connection:connection] );
             }
             else {
-                Modal.show( 'sys_wf_node:open', [item:it, editing: editing] );
+                Modal.show( 'sys_wf_node:open', [item:it, editing: editing, connection:connection] );
             }
         },
         showMenu : {
-            [Inv.lookupOpener('node:open', [entity:it])]
+            [Inv.lookupOpener('node:open', [entity:it, connection:connection])]
         },
         afterRemove: { nlist->
             nlist.each { n->
