@@ -172,4 +172,26 @@ class WorkflowGUIService {
     }
 
 
+    @ProxyMethod
+    public void copy( def o ) {
+        def target = o.name;
+        def source = o.oldname;
+
+        def model = openDataForExport( [name:source]);
+        def nodes = model.remove("nodes");
+        def transitions = model.remove("transitions");
+
+        model.name = target;
+        wf.create( model );
+
+        nodes.each{ 
+            it.processname = target; 
+            wfNode.create( it );
+        };
+        transitions.each { 
+            it.processname = target;
+            wfTransition.create(it); 
+        };        
+    }
+
 }

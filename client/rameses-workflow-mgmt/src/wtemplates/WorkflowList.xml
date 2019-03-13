@@ -1,3 +1,7 @@
 <workunit extends="com/rameses/seti2/templates/CrudList.xml" schemaName="sys_wf" >
+    <invokers>
+        <invoker type="listActions" caption="Copy" action="copy" />
+        <invoker type="listActions" caption="Export" action="exportData" />        
+    </invokers>
     <code class="com.rameses.wf.models.WorkflowGUIListModel" />
 </workunit>

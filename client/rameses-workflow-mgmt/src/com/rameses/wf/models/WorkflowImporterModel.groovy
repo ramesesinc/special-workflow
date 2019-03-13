@@ -11,9 +11,14 @@ import com.rameses.io.*;
 
 public class WorkflowImporterModel {
 
-    @Service('WorkflowGUIService') 
-    def service; 
+    @Caller
+    def caller;
+    
+    public def getService() {
+        return InvokerProxy.instance.create( "WorkflowGUIService", null, caller.getConnection() );
+    }
 
+    
     def fileChooser = new javax.swing.JFileChooser(); 
 
     void startImport() {
