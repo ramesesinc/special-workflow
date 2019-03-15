@@ -19,6 +19,7 @@ public class WorkflowNodeModel  {
     def editing = true;
     def entity;
     def propList = [];
+    def selectedProperty;
     
     @PropertyChangeListener
     def listener = [
@@ -38,6 +39,10 @@ public class WorkflowNodeModel  {
     }
     
     def propListModel = [
+        isColumnEditable : { item, colName ->
+            return editing;
+        },
+
         fetchList: { o->
             return propList;
         },
@@ -49,6 +54,12 @@ public class WorkflowNodeModel  {
         }
     ] as EditorListModel;
     
+    void removeProperty() {
+        if(!selectedProperty) return;
+        propList.remove(selectedProperty);
+        propListModel.reload();
+    }
+    
     def doOk() {
         if( !item.info.name ) {
             item.id = entity.name;
@@ -57,10 +68,11 @@ public class WorkflowNodeModel  {
         item.info.clear();
         item.info.putAll( entity );
 
+        entity.properties.clear();    
         propList.each {
             def val = it.value; 
             if(val?.matches("true|false")) val = Boolean.parseBoolean( val );
-            entity.properties[(it.key)] = val;
+            entity.properties.put(it.key, val);
         }
         return "_close";
     }
