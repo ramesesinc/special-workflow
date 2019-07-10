@@ -64,7 +64,13 @@ class WorkflowTaskService  {
         r.prevtaskid = prevState.taskid;
 		def ti = createTaskInstance( r );
 		def ntask =  findTask( [taskid: ti.taskid, processname: r.processname ] );
-        notify( ntask ); 
+         
+        //update the task before returning
+        def em2 = db.lookup( r.processname );
+        em2.find([objid: r.refid]).update([taskid: ntask.taskid]);
+
+        notify( ntask );
+
         return ntask ;
     }
 
@@ -288,6 +294,11 @@ class WorkflowTaskService  {
         def ntask = findTask( [taskid: ti.taskid, processname: t.processname ] );
 
         notify( ntask );
+
+        //update the reference before returning
+        def em2 = db.lookup( t.processname );
+        em2.find([objid: tsk.refid]).update([taskid: ntask.taskid]);
+
         return ntask;
  	}
 
