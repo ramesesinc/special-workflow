@@ -1,6 +1,7 @@
-<workunit extends="com/rameses/seti2/templates/CrudList.xml" schemaName="sys_wf" >
+<!-- extends1="com/rameses/seti2/templates/CrudList.xml" -->
+<workunit extends="wtemplates/WorkflowList.xml" schemaName="sys_wf" >
     <invokers>
-        <invoker folderid="/explorer/developer/workflow" caption="Workflow Management" 
-                 action="init" target="window" role="DEV" />
+        <invoker folderid="/explorer/developer/workflow" caption="Common Workflow Def" 
+                 action="init" target="window" index="1000" role="DEV" />
     </invokers>
 </workunit>
