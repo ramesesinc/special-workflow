@@ -5,7 +5,7 @@ import com.rameses.util.*;
 
 class WorkflowTaskService  {		
 
-    @Service(value='NotificationService')
+    @Service("WorkflowTaskNotificationService")
     def notificationSvc;
 
 	@DataContext(dynamic=true)
@@ -26,21 +26,6 @@ class WorkflowTaskService  {
 	@Service
 	def self;
 
-    private void notify( data ) { 
-        def msg = [:];
-        msg.objid = data.taskid;
-        msg.recipienttype='group';
-        msg.senderid = env.USERID;
-        msg.sender = env.NAME;
-        msg.recipientid = data.assignee?.objid; 
-        msg.tag = data.processname +':'+ data.state; 
-        msg.message = (data.message? data.message: msg.tag);   
-        try {           
-            notificationSvc.addMessage( msg ); 
-        } catch(Throwable t) {
-            println 'failed to send notification message caused by '+ t.message;                
-        }
-    }
 
     @ProxyMethod
 	public def start( def r ) {
@@ -69,8 +54,7 @@ class WorkflowTaskService  {
         def em2 = db.lookup( r.processname );
         em2.find([objid: r.refid]).update([taskid: ntask.taskid]);
 
-        notify( ntask );
-
+        notificationSvc.notify( ntask );
         return ntask ;
     }
 
@@ -293,7 +277,7 @@ class WorkflowTaskService  {
         def ti = createTaskInstance( m );
         def ntask = findTask( [taskid: ti.taskid, processname: t.processname ] );
 
-        notify( ntask );
+        notificationSvc.notify( ntask );
 
         //update the reference before returning
         def em2 = db.lookup( t.processname );
@@ -316,7 +300,6 @@ class WorkflowTaskService  {
         m.assignee = [objid:env.USERID, name:env.FULLNAME];
         m.startdate =  dateSvc.getServerDate();  
         em.find([taskid: t.taskid]).update(m); 
-
 
         notificationSvc.updateRecipient([objid: t.taskid, recipientid:m.assignee.objid]);
         return m;

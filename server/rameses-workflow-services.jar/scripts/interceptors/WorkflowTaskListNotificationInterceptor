@@ -1,0 +1,45 @@
+
+import com.rameses.annotations.*;
+import com.rameses.util.*;
+import java.rmi.server.*;
+
+
+public class WorkflowTaskListNotificationInterceptor {
+
+	@DataContext(dynamic=true)
+	def em;	
+
+	@Service("WorkflowTaskService")
+	def workflowTaskSvc;
+
+	@Service("SchemaService")
+	def schemaService;
+
+	@DataContext(dynamic=true)
+	def db;
+
+	@Env
+	def env;
+
+	@After(pattern="WorkflowTaskListService.getNodeList") 
+	public void afterGetNodes( def evt ) {
+		def r = evt.args[0];
+		println "display list " + r;
+		
+		/*
+		def result = evt.result;
+		result.each {
+			if( it.name == 'mytask' ) {
+				it.count = appTask.select("c:{COUNT(*)}").where("task.assignee.objid = :uid AND NOT(task.state = 'end') ", [uid: env.USERID]).val();
+			}
+			else if(it.name != 'end') {
+				it.count = appTask.select("c:{COUNT(*)}").where("task.state = :t", [t:it.name] ).val();
+			}
+			if( it.count > 0 ) {
+				it.title = it.title + " (" + it.count + ")";
+			}
+		}
+		*/
+	}
+
+}

@@ -1,0 +1,47 @@
+import com.rameses.annotations.*;
+
+
+class WorkflowTaskNotificationService {		
+
+    @XConnection('socketio')
+    def socketio;
+
+    @DataContext("sys_wf")
+    def sysWf;
+
+    @DataContext(dynamic=true)
+    def db;
+
+    @Env
+    def env;
+
+    @ProxyMethod
+    public void notify( def data ) {
+        def event = data.processname;
+        def packet = [:];
+        packet.processname = data.processname;
+        packet.refid = data.refid;
+        packet.taskid = data.taskid;
+        socketio.send(event, packet);
+    }
+
+    @ProxyMethod
+    public void updateRecipient( def o ) {
+        //updating o.taskid, o.recipientid
+    }
+
+    @ProxyMethod
+    public def getInfo( def o ) {
+        def info = [:];
+        //get the tasklist
+        if(o.context == 'tasklist') {
+            def procname = o.processname;
+            def nodes = "('" + sysWf.find( [processname: o.processname] ).where("tracktime = 1").list()*.name.join("','") + "')";
+            println "nodes is " + nodes;
+            def taskEm = db.lookup( procname + "_task" );    
+            info.items = taskEm.where( "startdate IS NULL AND enddate IS NULL AND state IN " + nodes ).groupBy("state").select("state,COUNT(*)").list();    
+        }
+        return info;
+    }
+
+}
