@@ -301,7 +301,7 @@ class WorkflowTaskService  {
         m.startdate =  dateSvc.getServerDate();  
         em.find([taskid: t.taskid]).update(m); 
 
-        notificationSvc.updateRecipient([objid: t.taskid, recipientid:m.assignee.objid]);
+        notificationSvc.notify([taskid: t.taskid, processname: t.processname, refid: t.refid]);
         return m;
     }
 
