@@ -5,8 +5,6 @@ import com.rameses.util.*;
 
 class WorkflowTaskService  {		
 
-    @Service("WorkflowTaskNotificationService")
-    def notificationSvc;
 
 	@DataContext(dynamic=true)
 	def db;
@@ -53,8 +51,6 @@ class WorkflowTaskService  {
         //update the task before returning
         def em2 = db.lookup( r.processname );
         em2.find([objid: r.refid]).update([taskid: ntask.taskid]);
-
-        notificationSvc.notify( ntask );
         return ntask ;
     }
 
@@ -135,7 +131,7 @@ class WorkflowTaskService  {
                     throw new Exception("1. Please pass an info parameter in findNextTransition bec. there is an eval statement in the transition")
                 def mm = [:];
                 mm.putAll( r.info );
-                mm.info = r.info;         
+                mm.info = r.info;    
                 boolean b = ExpressionResolver.instance.evalBoolean( _tran.eval, mm );
                 if(!b) throw new Exception("Cannot proceed. Condition failed " + _tran.eval);
             }
@@ -151,6 +147,7 @@ class WorkflowTaskService  {
                     mm.putAll( r.info );
                     mm.info = r.info;         
                     boolean b = ExpressionResolver.instance.evalBoolean( t.eval, mm );
+
                     if(!b) continue;
                     _xtransition = t;
                     break;
@@ -194,7 +191,7 @@ class WorkflowTaskService  {
     	def em = db.lookup( r.processname +"_task" );
     	def ti = em.select("taskid,startdate,dtcreated,state,prevtaskid,assignee.*,refid,message").find( [taskid: r.taskid ]).first(); 
     	if(!ti) throw new Exception("Task not found for " + r.taskid);
-    	ti += wfNode.select("title,domain,role,properties").find( [name:ti.state, processname: r.processname] ).first();
+    	ti += wfNode.select("title,domain,role,properties,idx").find( [name:ti.state, processname: r.processname] ).first();
     	ti.transitions = wfTransitions.select("action,to,idx,eval,properties,permission,caption")
     			.find( [processname: r.processname, parentid: ti.state ]).list();
         ti.transitions.each {
@@ -277,8 +274,6 @@ class WorkflowTaskService  {
         def ti = createTaskInstance( m );
         def ntask = findTask( [taskid: ti.taskid, processname: t.processname ] );
 
-        notificationSvc.notify( ntask );
-
         //update the reference before returning
         def em2 = db.lookup( t.processname );
         em2.find([objid: tsk.refid]).update([taskid: ntask.taskid]);
@@ -301,7 +296,10 @@ class WorkflowTaskService  {
         m.startdate =  dateSvc.getServerDate();  
         em.find([taskid: t.taskid]).update(m); 
 
-        notificationSvc.notify([taskid: t.taskid, processname: t.processname, refid: t.refid]);
+        m.taskid = t.taskid;
+        m.processname = t.processname;
+        m.refid = t.refid;
+
         return m;
     }
 
@@ -346,5 +344,7 @@ class WorkflowTaskService  {
         def parentEm = db.lookup( t.processname );
         parentEm.find( [objid: newtsk.refid] ).update( [taskid: newtsk.taskid ]);
     }
+
+    
 
 }

@@ -15,7 +15,6 @@ public class WorkflowPeristenceInterceptor {
 	@Service("SchemaService")
 	def schemaService;
 
-
 	/*****************************************************************************************************
 	* This is fired after creating an entity that is a 
 	*****************************************************************************************************/
