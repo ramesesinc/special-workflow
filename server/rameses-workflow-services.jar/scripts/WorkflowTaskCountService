@@ -5,7 +5,7 @@ import com.rameses.util.*;
 
 class WorkflowTaskCountService  {		
 
-    @Service(value='UserRoleService', connection="admin")
+    @Service(value='UserRoleService')
     def roleSvc;
 
     @Service
@@ -24,13 +24,8 @@ class WorkflowTaskCountService  {
         if (env.ORGROOT == 1) {
             orgid = null;
         }   
-        def userRoles = roleSvc.getRolesByUser([userid: userid, orgid:orgid]); 
-        if(!o.domain) {
-            return userRoles*.role;
-        }
-        else {
-            return userRoles.findAll{ it.domain?.toLowerCase() == o.domain.toLowerCase() }*.role;
-        }
+        def userRoles = roleSvc.getUserRoles([userid: userid, orgid:orgid]);
+        return userRoles*.key;
     }
 
     //this is overridable by specific applications
@@ -41,15 +36,15 @@ class WorkflowTaskCountService  {
 
     @ProxyMethod
     public def getNodeListTaskCount( def o ) {
-        o.roles = getUserRoles( [domain: o.domain] );
         o.notificationid = o.notificationid;
         //this is to check if there are overrides
         def customList = self.getCustomNodeListTaskCount( o );
         if( customList ) return customList;
 
         def taskCount = activeDb.lookup( "main", "wf_taskcount");
-        def m = [processname: o.processname, roles:  "'" + o.roles.join("','") + "'" ];
 
+        def orgid = (env.ORGROOT == 1) ? null : env.ORGID;
+        def m = [processname: o.processname, roles:  roleSvc.getRolesString( [orgid: orgid]  ), userid: env.USERID ];
         //taskCount.debug = true;
         def nodeList = taskCount.getNodeListTaskCount( m );
         return nodeList;
@@ -61,5 +56,13 @@ class WorkflowTaskCountService  {
         if(!nodeList) return [ count: 0 ];
         return [count: nodeList.sum{ it.count }];
     }
+
+    @ProxyMethod
+    public def getMyTaskCount( def o ) {
+        def m = [processname:o.processname, userid: env.USERID];
+        def taskCount = activeDb.lookup( "main", "wf_taskcount");
+        return taskCount.getMyTaskCount( m );
+    }
+
 
 }

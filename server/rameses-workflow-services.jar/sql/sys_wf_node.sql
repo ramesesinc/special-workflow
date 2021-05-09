@@ -5,14 +5,12 @@ WHERE domain = $P{domain}
 ORDER BY processname
 
 [getTaskCount]
-SELECT COUNT(*), bt.state, sn.role  
-FROM building_application_task bt
-INNER JOIN sys_wf_node sn ON sn.processname = 'building_application' AND sn.name = bt.state 
+SELECT bt.state, COUNT(*) AS count, sn.role  
+FROM ${processname}_task bt 
+INNER JOIN ${processname} app ON app.taskid=bt.taskid
+INNER JOIN sys_wf_node sn ON sn.processname = '${processname}' AND sn.name = bt.state 
 WHERE bt.assignee_objid IS NULL
 AND bt.enddate IS NULL 
-AND bt.state NOT IN ('start', 'end' )
 AND sn.tracktime = 1
-AND NOT(sn.role IS NULL )
-AND sn.role IN ${building_application_roles}
+AND sn.role IN ( ${roles} )
 GROUP BY bt.state, sn.role
-

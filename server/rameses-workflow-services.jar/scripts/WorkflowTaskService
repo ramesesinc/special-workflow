@@ -163,16 +163,6 @@ class WorkflowTaskService  {
             throw new Exception("Next transition not found! Please check action or current state");
         }
 
-        //check the next node before proceeding
-        def nextNode = wfNode.select("name,nodetype").find( [name:_xtransition.to, processname: r.processname] ).first();
-        if( nextNode.nodetype == 'decision' ) {
-            def req = [processname: r.processname, prevstate: nextNode.name, refid: r.refid, info: r.info];
-            _xtransition = findNextTransition( req );
-            if( r.info.message ) {
-                _xtransition.message = r.info.message;
-            }   
-        }
-
         //check to node first
     	return _xtransition;
     }
@@ -229,8 +219,33 @@ class WorkflowTaskService  {
         return findReturnSender( em, state, g.prevtaskid );
     }
  
- 	@ProxyMethod
- 	public def signal( def t ) {
+    @ProxyMethod
+    public def fireDecision( def req ) {
+        //save the task instance first for the decision node used for signalling
+        def m = [:];
+        m.processname = req.processname;
+        m.refid = req.refid;
+        m.state = req.name;        
+        m.prevtaskid = req.prevtaskid;
+        def ti = createTaskInstance( m );
+
+        //find the next transition based on eval
+        req.prevstate = req.name;
+        def ntrans = findNextTransition( req );
+
+        //force signal the next step.
+        def nt = [:];
+        nt.processname = req.processname;
+        nt.taskstate = req.name;
+        nt.taskid = ti.taskid;
+        nt.refid = req.refid;
+        nt.action = ntrans.action;
+        nt.info = req.info;
+        return self.fireTransition( nt );
+    }
+
+    private def doTransitionAction(def t) {
+
         if(!t.processname) throw new Exception("processname is required for signal");
 
         def em = db.lookup( t.processname +"_task" );
@@ -260,26 +275,49 @@ class WorkflowTaskService  {
         //find next transition:
         def m = [processname: t.processname, prevstate: tsk.state, action:t.action, to:t.to, refid: tsk.refid, info: t.info];
         def trans = findNextTransition( m );
-        m.state = trans.to;        
-        m.assignee = t.assignee;
 
-        m.prevtaskid = t.taskid;
-        m.message = t.message;
-        if( trans.message ) {
-            m.message = trans.message; 
-        }    
-        if(t.autostart) {
-            m.autostart = t.autostart;
-        }    
-        def ti = createTaskInstance( m );
-        def ntask = findTask( [taskid: ti.taskid, processname: t.processname ] );
+        //check the next node before proceeding
+        def nextNode = wfNode.select("name,nodetype").find( [name:trans.to, processname: t.processname] ).first();
 
-        //update the reference before returning
-        def em2 = db.lookup( t.processname );
-        em2.find([objid: tsk.refid]).update([taskid: ntask.taskid]);
+        if( nextNode.nodetype == 'decision' ) {
+            def req = [processname: t.processname, name: nextNode.name, refid: tsk.refid, info: t.info, prevtaskid: t.taskid];
+            return self.fireDecision( req );
+        }
+        else {
+            m.state = trans.to;        
+            m.assignee = t.assignee;
+            m.prevtaskid = t.taskid;
+            m.message = t.message;
+            if( trans.message ) {
+                m.message = trans.message; 
+            }    
+            if(t.autostart) {
+                m.autostart = t.autostart;
+            }    
+            def ti = createTaskInstance( m );
+            def ntask = findTask( [taskid: ti.taskid, processname: t.processname ] );
 
-        return ntask;
+            //record the previous state and action
+            ntask.fromstate = tsk.state;
+            ntask.fromaction = t.action;
+
+            //update the reference before returning
+            def em2 = db.lookup( t.processname );
+            em2.find([objid: tsk.refid]).update([taskid: ntask.taskid]);
+            return ntask;
+        }
  	}
+
+    @ProxyMethod
+    public def fireTransition( def t ) {
+        return doTransitionAction( t );
+    }
+
+    @ProxyMethod
+    public def signal( def t ) {
+        return doTransitionAction( t );
+    }
+
 
     @ProxyMethod
     public def assignToMe( def t ) {
@@ -312,7 +350,7 @@ class WorkflowTaskService  {
         if(!t.refid) throw new Exception("refid is required for getTransactionHistory");
         if(!t.processname) throw new Exception("processname is required for signal");
         def em = db.lookup( t.processname +"_task" );
-        return em.where(" NOT(state = 'start') ").find([refid: t.refid]).orderBy('dtcreated').list();
+        return em.where(" NOT(state = 'start') ").find([refid: t.refid]).orderBy('dtcreated DESC').list();
     }
 
     /*********************************************
