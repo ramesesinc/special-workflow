@@ -1,8 +1,13 @@
 <workunit allowCreate="false">
     
     <invokers>
-        <invoker type="sys_wf:create" caption="New Workflow" target="window"  action="create"/>
-        <invoker type="sys_wf:open" caption="Open Workflow" target="window"  action="open"/>
+        <invoker type="sys_wf:create" caption="New Workflow" 
+            formId="wf:#{entity.name}"
+            target="window"  action="create"/>
+        
+        
+        <invoker type="sys_wf:open" caption="Open Workflow" target="window"  
+            formId="wf:#{entity.name}" action="open"/>
         
         <!-- form actions -->
         <invoker type="formActions" caption="Close"  action="_close" immediate="true"/>

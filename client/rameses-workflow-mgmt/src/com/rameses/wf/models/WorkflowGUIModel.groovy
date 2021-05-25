@@ -23,6 +23,11 @@ public class WorkflowGUIModel  {
     @FormTitle
     String title;
     
+    @FormId
+    public String getFormid() {
+        return "wf:" + processname;
+    }
+    
     def fileChooser = new javax.swing.JFileChooser(); 
 
     boolean editing = false;
